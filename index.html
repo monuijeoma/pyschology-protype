@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Apply Psychology | Practice Studio</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: #f4f3fa; color: #24213b;
+  font-family: Arial, sans-serif; line-height: 1.6;
+}
+header { background: #302650; color: white; padding: 24px 6%; }
+header strong { font-size: 22px; }
+header span { display: block; color: #ddd5f5; font-size: 14px; }
+main { max-width: 850px; margin: 36px auto; padding: 0 20px 50px; }
+h1 { font-size: clamp(30px, 6vw, 44px); line-height: 1.15; }
+h2 { margin-top: 0; font-size: 23px; }
+.card {
+  background: white; border: 1px solid #e3dfec;
+  padding: 26px; border-radius: 20px; margin: 22px 0;
+}
+.tag {
+  display: inline-block; background: #e8e1fa; color: #503786;
+  padding: 5px 12px; border-radius: 30px; font-size: 13px;
+}
+label { display: block; font-weight: bold; margin: 18px 0 7px; }
+input, textarea {
+  width: 100%; padding: 14px; border: 1px solid #b8b1c9;
+  border-radius: 10px; font: inherit; background: white;
+}
+textarea { min-height: 160px; resize: vertical; }
+button {
+  background: #6846aa; color: white; border: 0;
+  padding: 13px 20px; border-radius: 10px; font: inherit;
+  font-weight: bold; cursor: pointer; margin: 12px 8px 0 0;
+}
+button.secondary { background: #eee9f6; color: #45336b; }
+button:hover { filter: brightness(.94); }
+:focus-visible { outline: 3px solid #a777eb; outline-offset: 3px; }
+.note { font-size: 14px; color: #625b72; }
+.hint { background: #f3eefb; padding: 16px; border-radius: 10px; }
+.check { font-weight: normal; }
+.check input { width: auto; margin-right: 8px; }
+[hidden] { display: none !important; }
+footer { font-size: 13px; color: #625b72; }
+</style>
+</head>
+<body>
+<header>
+  <strong>Apply Psychology</strong>
+  <span>The practice studio</span>
+</header>
+
+<main>
+<span class="tag">Interactive student prototype</span>
+<h1>Turn what you know<br>into stronger answers.</h1>
+<p>Practise applying psychology to a scenario, then reflect and improve.</p>
+
+<section class="card">
+  <h2>1. Choose your topic</h2>
+  <label for="topic">What would you like to practise?</label>
+  <input id="topic" list="topics" value="Research methods"
+    placeholder="Choose a suggestion or type any topic">
+  <datalist id="topics">
+    <option value="Research methods">
+    <option value="Memory">
+    <option value="Social influence">
+  </datalist>
+  <p class="note">
+    Three topics include sample questions. For another topic,
+    add your own scenario and question.
+  </p>
+  <button id="start">Start practice →</button>
+  <p id="topicError" role="alert"></p>
+</section>
+
+<section id="practice" class="card" hidden>
+  <span id="topicLabel" class="tag"></span>
+  <h2 style="margin-top:16px">2. Apply your knowledge</h2>
+  <p class="note">Original practice material, not an official exam question.</p>
+
+  <div id="prepared">
+    <p id="scenario"></p>
+    <p><strong id="question"></strong></p>
+  </div>
+
+  <div id="custom" hidden>
+    <label for="ownQuestion">Your scenario and question</label>
+    <textarea id="ownQuestion"
+      placeholder="Paste a question you want to practise..."></textarea>
+  </div>
+
+  <button class="secondary" id="hintButton">Show a hint</button>
+  <p id="hint" class="hint" hidden></p>
+
+  <label for="answer">Your answer</label>
+  <textarea id="answer"
+    placeholder="Name the relevant concept, link it to the scenario, and explain your reasoning."></textarea>
+  <p class="note" id="wordCount">0 words</p>
+  <button id="reviewButton">Review my answer →</button>
+  <p id="answerError" role="alert"></p>
+</section>
+
+<section id="review" class="card" hidden>
+  <h2>3. Review and improve</h2>
+  <p class="note">
+    This is a self-review checklist with prepared guidance.
+    The prototype does not assess your answer or award marks.
+  </p>
+
+  <label class="check">
+    <input type="checkbox"> I answered the question being asked.
+  </label>
+  <label class="check">
+    <input type="checkbox"> I used a relevant psychology concept accurately.
+  </label>
+  <label class="check">
+    <input type="checkbox"> I linked my explanation to specific scenario details.
+  </label>
+  <label class="check">
+    <input type="checkbox"> I explained why the link matters.
+  </label>
+
+  <details>
+    <summary>View guidance for this question</summary>
+    <p id="guidance"></p>
+  </details>
+
+  <label for="revision">Improve your answer</label>
+  <textarea id="revision"
+    placeholder="Use the checklist and guidance to revise your answer."></textarea>
+  <button id="finish">Finish practice</button>
+  <p id="finishMessage" role="status"></p>
+</section>
+
+<footer>
+  University project prototype · No sign-in required.
+  Answers stay on this page and are cleared when you reload or leave.
+</footer>
+</main>
+
+<script>
+const byId = id => document.getElementById(id);
+
+const examples = {
+  "research methods": {
+    scenario: "A researcher randomly allocates 40 students to two groups. One group learns a list of 20 words in silence. The other learns the same list with music playing. Both groups have two minutes to learn the words and then write down as many as they can remember.",
+    question: "Identify the independent variable and explain how the dependent variable is operationalised in this study.",
+    hint: "What changes between the groups? What exactly is counted to measure the outcome?",
+    guidance: "The independent variable is the sound condition during learning: silence or music. The dependent variable is memory performance, operationalised as the number of words correctly recalled from the 20-word list. Naming 'memory' alone does not specify how it is measured."
+  },
+  "memory": {
+    scenario: "Maya revises Spanish vocabulary on Monday and Italian vocabulary on Tuesday. On Wednesday, she struggles to recall some Spanish words because Italian words keep coming to mind.",
+    question: "Explain how retroactive interference could account for Maya's difficulty.",
+    hint: "Think about which learning happened first and which happened later.",
+    guidance: "Retroactive interference occurs when newer learning disrupts recall of earlier learning. Maya's later learning of Italian vocabulary interferes with recall of the Spanish vocabulary learned previously. Link the order of learning explicitly to the direction of interference."
+  },
+  "social influence": {
+    scenario: "During a group discussion, Amir publicly agrees with an answer that most classmates support. Privately, he thinks it is wrong, but he wants the group to accept him.",
+    question: "Explain how normative social influence could account for Amir's behaviour.",
+    hint: "Is Amir trying to be correct, or trying to fit in?",
+    guidance: "Normative social influence involves conforming to gain acceptance or avoid rejection. Amir agrees publicly because he wants acceptance, although his private belief remains unchanged. This public agreement without private acceptance illustrates compliance."
+  }
+};
+
+let current;
+
+byId("start").onclick = () => {
+  const topic = byId("topic").value.trim();
+  byId("topicError").textContent = "";
+  if (!topic) {
+    byId("topicError").textContent = "Please choose or enter a topic.";
+    return;
+  }
+  current = examples[topic.toLowerCase()];
+  byId("topicLabel").textContent = topic;
+  byId("prepared").hidden = !current;
+  byId("custom").hidden = !!current;
+
+  if (current) {
+    byId("scenario").textContent = current.scenario;
+    byId("question").textContent = current.question;
+  }
+
+  byId("hint").textContent = current
+    ? current.hint
+    : "Identify the command word, choose a relevant concept, and connect it to a specific detail in your scenario.";
+
+  byId("guidance").textContent = current
+    ? current.guidance
+    : "For this custom question, compare your answer with your teacher's guidance or the relevant mark scheme. Check accuracy, application and explanation. This prototype has no topic-specific model answer for your custom question.";
+
+  ["answer", "revision", "ownQuestion"].forEach(id => byId(id).value = "");
+  ["answerError", "finishMessage"].forEach(id => byId(id).textContent = "");
+  document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false);
+  document.querySelector("details").open = false;
+  byId("wordCount").textContent = "0 words";
+  byId("hint").hidden = true;
+  byId("hintButton").textContent = "Show a hint";
+  byId("review").hidden = true;
+  byId("practice").hidden = false;
+  byId("practice").scrollIntoView({behavior: "smooth"});
+};
+
+byId("hintButton").onclick = () => {
+  byId("hint").hidden = !byId("hint").hidden;
+  byId("hintButton").textContent =
+    byId("hint").hidden ? "Show a hint" : "Hide hint";
+};
+
+byId("answer").oninput = () => {
+  const value = byId("answer").value.trim();
+  byId("wordCount").textContent =
+    (value ? value.split(/\s+/).length : 0) + " words";
+};
+
+byId("reviewButton").onclick = () => {
+  byId("answerError").textContent = "";
+  if (!current && !byId("ownQuestion").value.trim()) {
+    byId("answerError").textContent = "Add your scenario and question first.";
+    return;
+  }
+  if (!byId("answer").value.trim()) {
+    byId("answerError").textContent = "Write an answer before reviewing it.";
+    return;
+  }
+  byId("review").hidden = false;
+  byId("review").scrollIntoView({behavior: "smooth"});
+};
+
+byId("finish").onclick = () => {
+  byId("finishMessage").textContent = byId("revision").value.trim()
+    ? "Practice complete. Compare your first and revised answers: where did you make your application more specific?"
+    : "Write your improved answer before finishing.";
+};
+</script>
+</body>
+</html>
